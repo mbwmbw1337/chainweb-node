@@ -28,7 +28,7 @@ let haskellSrc = with nix-filter.lib; filter {
         "flake.lock"
       ] ++ pkgs.lib.optional (compiler != "ghc8107") "cabal.project.freeze";
     };
-    chainweb-node = pkgs.haskell-nix.project' {
+    chainweb = pkgs.haskell-nix.project' {
       src = haskellSrc;
       compiler-nix-name = compiler;
       projectFileName = "cabal.project";
@@ -45,8 +45,14 @@ let haskellSrc = with nix-filter.lib; filter {
         }
       ];
     };
-    flake = chainweb-node.flake {};
-    default = flake.packages."chainweb:exe:chainweb-node";
+    flake = chainweb.flake {};
+    default = pkgs.symlinkJoin {
+      name = "chainweb";
+      paths = [
+        flake.packages."chainweb:exe:chainweb-node"
+        flake.packages."chainweb:exe:cwtool"
+      ];
+    };
 in {
   inherit flake default haskellSrc chainweb-node pkgs;
 }
